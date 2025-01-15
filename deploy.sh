@@ -75,7 +75,7 @@ check_activation_script() {
 			BOT_TOKEN="$(head -1 "$HOME/.config/discord/BOT_TOKEN")"
 			LAVALINK_PASS="$(head -1 "$HOME/.config/discord/LAVALINK_PASS")"
 			OWNER_ID="$(head -1 "$HOME/.config/discord/OWNER_ID")"
-_end_var_fix
+		_end_var_fix
         printf "%sDone!\n\e[0m" "${GREEN}"
 
     elif ! grep -q -E "BOT_TOKEN|LAVALINK_PASS|OWNER_ID" "$VENV_ACTIVATION_SCRIPT" 2>/dev/null; then
@@ -85,7 +85,7 @@ _end_var_fix
 			BOT_TOKEN="$(head -1 "$HOME/.config/discord/BOT_TOKEN")"
 			LAVALINK_PASS="$(head -1 "$HOME/.config/discord/LAVALINK_PASS")"
 			OWNER_ID="$(head -1 "$HOME/.config/discord/OWNER_ID")"
-_end_var_fix
+		_end_var_fix
     fi
 
     return $?;
@@ -115,11 +115,13 @@ start_lavalink() {
 while [[ -n "$1" ]]; do
     case "$1" in
         (-h|--help)
-            printf "Usage: %s [-h] [-l /path/to/Lavalink]\n" "$0";
-            printf "Options:\n"
-            printf "    -h, --help    \t\t\t Show this help message\n";
-            printf "    -l, --lavalink\t\t\t Path to Lavalink directory. If no directory\n";
-            printf "                  \t\t\t is specified, './Lavalink/' is used.\n"
+			cat <<- EOC
+			Usage: %s [-h] [-l /path/to/Lavalink]\n "$0";
+			Options:\n
+				-h, --help	         Show this help message
+				-l, --lavalink       Path to Lavalink directory. If no directory
+			                     is specified, './Lavalink/' is used
+			EOC
             exit 0;
             ;;
         (-l|--lavalink)
@@ -135,8 +137,8 @@ while [[ -n "$1" ]]; do
             ;;
     esac
 done
-if [[ -z "$LAVALINK_DIR" ]]; then LAVALINK_DIR="./Lavalink"; fi
 
+: "${LAVALINK_DIR:="./Lavalink"}"
 
 if [[ ! -d "$LAVALINK_DIR" ]] && ! mkdir -p "$LAVALINK_DIR"; then
     printf >&2 "%sLavalink directory %s does not exist!\n\e[0m" "${RED}" "$LAVALINK_DIR"
@@ -161,6 +163,9 @@ if [[ ! -f "$LAVALINK_DIR/application.yml" ]]; then
         then
             printf >&2 "%sFailed to download Lavalink config!\n\e[0m" "${RED}"
             exit 1
+        else
+            printf "Downloaded default application.yml. You must go and configure it now.\n"
+            exit 0
     fi
 fi
 
