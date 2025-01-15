@@ -3,6 +3,7 @@ import contextlib
 import io
 import os
 import asyncio
+from re import search
 import discord
 import wavelink
 from typing import cast
@@ -10,6 +11,7 @@ from discord.ext import commands
 from kolbot.bot import Bot
 from kolbot.utils import get_current_queue
 import logging
+
 
 bot: Bot = Bot()
 
@@ -51,6 +53,7 @@ async def play(ctx: commands.Context, *, query: str) -> None:
         return
     player: wavelink.Player = cast(wavelink.Player, ctx.voice_client)
     if not player:
+        pass
         try:
             player = await ctx.author.voice.channel.connect(  # type:ignore
                 cls=wavelink.Player
@@ -72,9 +75,11 @@ async def play(ctx: commands.Context, *, query: str) -> None:
         )
         return
 
-    # Fetch tracks and playlists. Enable Spotify && other sources via LavaSrc
-    # Use YouTube for searching non-urls
-    player.autoplay = wavelink.AutoPlayMode.enabled
+    # Uses YouTube for searching non-urls. 
+    # enabled = AutoPlay will play songs for us and fetch recommendations...
+    # partial = AutoPlay will play songs for us, but WILL NOT fetch recommendations...
+    # disabled = AutoPlay will do nothing...
+    player.autoplay = wavelink.AutoPlayMode.partial
     try:
         tracks: wavelink.Search = await wavelink.Playable.search(query)
     except wavelink.LavalinkLoadException as e:
@@ -533,6 +538,17 @@ async def owner(ctx: commands.Context) -> None:
     )
     await ctx.send(embed=embed)
 
+@bot.event
+async def on_wavelink_track_exception(reason, **kwargs):
+    print(f"Track ended! Reason: {reason.exception}")
+    logging.log(level=logging.ERROR, msg=f"Encountered error while trying to play \
+        track: {reason.exception}")
+    try: 
+        await bot.home_channel.send(content=f"Encountered exception: {reason.exception}")
+    except Exception:
+        print("Couldn't output error message to Discord.")
+
+
 
 async def main() -> None:
     async with bot:
@@ -541,8 +557,6 @@ async def main() -> None:
         else:
             raise Exception("No bot token provided.")
 
-
 if __name__ == "__main__":
     asyncio.run(main())
 
-# I'm looking for a doctor in the area, since I'll be moving down there soon
